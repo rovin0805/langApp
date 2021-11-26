@@ -23,7 +23,12 @@ const Card = styled(Animated.createAnimatedComponent(View))`
 export default function App() {
   // Values
   const scale = useRef(new Animated.Value(1)).current;
-  const translateX = useRef(new Animated.Value(0)).current;
+  const positionX = useRef(new Animated.Value(0)).current;
+  const rotation = positionX.interpolate({
+    inputRange: [-250, 250],
+    outputRange: ["-15deg", "15deg"],
+    extrapolate: "extend",
+  });
 
   // Animations
   const onPressIn = Animated.spring(scale, {
@@ -34,8 +39,16 @@ export default function App() {
     toValue: 1,
     useNativeDriver: true,
   });
-  const goCenter = Animated.spring(translateX, {
+  const goCenter = Animated.spring(positionX, {
     toValue: 0,
+    useNativeDriver: true,
+  });
+  const disappearLeft = Animated.spring(positionX, {
+    toValue: -500,
+    useNativeDriver: true,
+  });
+  const disappearRight = Animated.spring(positionX, {
+    toValue: 500,
     useNativeDriver: true,
   });
 
@@ -45,10 +58,16 @@ export default function App() {
       onStartShouldSetPanResponder: () => true,
       onPanResponderGrant: () => onPressIn.start(),
       onPanResponderMove: (_, { dx }) => {
-        translateX.setValue(dx);
+        positionX.setValue(dx);
       },
-      onPanResponderRelease: () => {
-        Animated.parallel([onPressOut, goCenter]).start();
+      onPanResponderRelease: (_, { dx }) => {
+        if (dx < -280) {
+          disappearLeft.start();
+        } else if (dx > 280) {
+          disappearRight.start();
+        } else {
+          Animated.parallel([onPressOut, goCenter]).start();
+        }
       },
     })
   ).current;
@@ -57,7 +76,11 @@ export default function App() {
     <Container>
       <Card
         style={{
-          transform: [{ scale }, { translateX }],
+          transform: [
+            { scale },
+            { translateX: positionX },
+            { rotateZ: rotation },
+          ],
         }}
         {...panResponder.panHandlers}
       >
