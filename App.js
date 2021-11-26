@@ -18,26 +18,31 @@ const AnimatedBox = Animated.createAnimatedComponent(Box);
 
 export default function App() {
   const [up, setUp] = useState(true);
-  const Y_POSITION = useRef(new Animated.Value(200)).current;
+  const position = useRef(new Animated.ValueXY({ x: 0, y: 200 })).current;
 
   const toggleUp = () => setUp((prev) => !prev);
 
   const moveBox = () => {
-    Animated.timing(Y_POSITION, {
+    Animated.timing(position.y, {
       toValue: up ? -200 : 200,
-      useNativeDriver: true,
+      useNativeDriver: false,
       duration: 3000,
     }).start(toggleUp);
   };
 
-  const opacity = Y_POSITION.interpolate({
-    inputRange: [-200, -150, 0, 150, 200],
-    outputRange: [1, 0.5, 0, 0.5, 1],
-  });
-
-  const borderRadius = Y_POSITION.interpolate({
+  const borderRadius = position.y.interpolate({
     inputRange: [-200, 0, 200],
     outputRange: [100, 0, 100],
+  });
+
+  const rotation = position.y.interpolate({
+    inputRange: [-200, 200],
+    outputRange: ["-360deg", "360deg"],
+  });
+
+  const bakgroundColor = position.y.interpolate({
+    inputRange: [-200, 200],
+    outputRange: ["rgb(255, 99, 71)", "rgb(71, 166, 255)"],
   });
 
   return (
@@ -45,9 +50,9 @@ export default function App() {
       <Pressable onPress={moveBox}>
         <AnimatedBox
           style={{
-            transform: [{ translateY: Y_POSITION }],
-            opacity,
+            transform: [{ translateY: position.y }, { rotateY: rotation }],
             borderRadius,
+            bakgroundColor, // useNativeDriver mubst be false to use it
           }}
         />
       </Pressable>
