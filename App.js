@@ -32,15 +32,20 @@ export default function App() {
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
+      onPanResponderGrant: () => {
+        console.log("Touch Started");
+        position.setOffset({
+          x: position.x._value,
+          y: position.y._value,
+        });
+      },
       onPanResponderMove: (_, { dx, dy }) => {
+        console.log("Finger moving");
         position.setValue({ x: dx, y: dy });
       },
       onPanResponderRelease: () => {
-        Animated.spring(position, {
-          toValue: { x: 0, y: 0 },
-          bounciness: 20,
-          useNativeDriver: true,
-        }).start();
+        console.log("Touch Finished");
+        position.flattenOffset(); // reset offset values
       },
     })
   ).current;
