@@ -73,11 +73,15 @@ export default function App() {
     toValue: -500,
     tension: 5,
     useNativeDriver: true,
+    restSpeedThreshold: 100, // 스프링 끝난 걸로 간주하는 속도
+    restDisplacementThreshold: 100, // 스프링이 끝난 걸로 간주하는 거리
   });
   const disappearRight = Animated.spring(positionX, {
     toValue: 500,
     tension: 5,
     useNativeDriver: true,
+    restSpeedThreshold: 100,
+    restDisplacementThreshold: 100,
   });
   const onDismiss = () => {
     scale.setValue(1);
