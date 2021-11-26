@@ -1,7 +1,8 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { Animated, PanResponder, View } from "react-native";
 import styled from "styled-components/native";
 import { Ionicons } from "@expo/vector-icons";
+import icons from "./icons";
 
 const Container = styled.View`
   flex: 1;
@@ -37,7 +38,10 @@ const Btn = styled.TouchableOpacity`
 `;
 
 export default function App() {
-  // Values
+  // State
+  const [iconIndex, setIconIndex] = useState(0);
+
+  // Animation values
   const scale = useRef(new Animated.Value(1)).current;
   const positionX = useRef(new Animated.Value(0)).current;
   const rotation = positionX.interpolate({
@@ -75,6 +79,11 @@ export default function App() {
     tension: 5,
     useNativeDriver: true,
   });
+  const onDismiss = () => {
+    scale.setValue(1);
+    positionX.setValue(0);
+    setIconIndex((prev) => prev + 1);
+  };
 
   // Pan Responders
   const panResponder = useRef(
@@ -86,9 +95,9 @@ export default function App() {
       },
       onPanResponderRelease: (_, { dx }) => {
         if (dx < -250) {
-          disappearLeft.start();
+          disappearLeft.start(onDismiss);
         } else if (dx > 250) {
-          disappearRight.start();
+          disappearRight.start(onDismiss);
         } else {
           Animated.parallel([onPressOut, goCenter]).start();
         }
@@ -96,21 +105,24 @@ export default function App() {
     })
   ).current;
 
+  // Button onPress
   const closePress = () => {
-    disappearLeft.start();
+    disappearLeft.start(onDismiss);
   };
   const resetPress = () => {
-    goCenter.start();
+    setIconIndex((prev) => prev - 1);
+    Animated.parallel([onPressOut, goCenter]).start();
   };
   const checkPress = () => {
-    disappearRight.start();
+    disappearRight.start(onDismiss);
   };
 
   return (
     <Container>
       <CardContainer>
         <Card style={{ transform: [{ scale: secondScale }] }}>
-          <Ionicons name="beer" color="#192a56" size={98} />
+          {/* Back Card */}
+          <Ionicons name={icons[iconIndex + 1]} color="#192a56" size={98} />
         </Card>
         <Card
           style={{
@@ -122,7 +134,8 @@ export default function App() {
           }}
           {...panResponder.panHandlers}
         >
-          <Ionicons name="pizza" color="#192a56" size={98} />
+          {/* Front Card */}
+          <Ionicons name={icons[iconIndex]} color="#192a56" size={98} />
         </Card>
       </CardContainer>
       <BtnContainer>
