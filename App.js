@@ -1,64 +1,68 @@
 import React, { useRef } from "react";
-import { Animated, PanResponder } from "react-native";
+import { Animated, PanResponder, View } from "react-native";
 import styled from "styled-components/native";
+import { Ionicons } from "@expo/vector-icons";
 
 const Container = styled.View`
   flex: 1;
   justify-content: center;
   align-items: center;
+  background-color: #00a8ff;
 `;
 
-const Box = styled.View`
-  background-color: tomato;
-  width: 200px;
-  height: 200px;
+const Card = styled(Animated.createAnimatedComponent(View))`
+  background-color: white;
+  width: 300px;
+  height: 300px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 12px;
+  box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
 `;
-
-const AnimatedBox = Animated.createAnimatedComponent(Box);
 
 export default function App() {
-  const position = useRef(
-    new Animated.ValueXY({
-      x: 0,
-      y: 0,
-    })
-  ).current;
-
-  const borderRadius = position.y.interpolate({
-    inputRange: [-200, 200],
-    outputRange: [100, 0],
-  });
-
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
-      onPanResponderGrant: () => {
-        console.log("Touch Started");
-        position.setOffset({
-          x: position.x._value,
-          y: position.y._value,
-        });
-      },
-      onPanResponderMove: (_, { dx, dy }) => {
-        console.log("Finger moving");
-        position.setValue({ x: dx, y: dy });
+      onPanResponderGrant: () => onPressIn(),
+      onPanResponderMove: (_, { dx }) => {
+        translateX.setValue(dx);
       },
       onPanResponderRelease: () => {
-        console.log("Touch Finished");
-        position.flattenOffset(); // reset offset values
+        Animated.parallel([
+          onPressOut,
+          Animated.spring(position, {
+            toValue: 0,
+            useNativeDriver: true,
+          }),
+        ]).start();
       },
     })
   ).current;
 
+  const scale = useRef(new Animated.Value(1)).current;
+  const translateX = useRef(new Animated.Value(0)).current;
+
+  const onPressIn = () =>
+    Animated.spring(scale, {
+      toValue: 0.9,
+      useNativeDriver: true,
+    }).start();
+  const onPressOut = Animated.spring(scale, {
+    toValue: 1,
+    useNativeDriver: true,
+  });
+
   return (
     <Container>
-      <AnimatedBox
+      <Card
         style={{
-          transform: position.getTranslateTransform(),
-          borderRadius,
+          transform: [{ scale }, { translateX }],
         }}
         {...panResponder.panHandlers}
-      />
+      >
+        <Ionicons name="pizza" color="#192a56" size={98} />
+      </Card>
     </Container>
   );
 }
