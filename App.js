@@ -21,37 +21,37 @@ const Card = styled(Animated.createAnimatedComponent(View))`
 `;
 
 export default function App() {
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onPanResponderGrant: () => onPressIn(),
-      onPanResponderMove: (_, { dx }) => {
-        translateX.setValue(dx);
-      },
-      onPanResponderRelease: () => {
-        Animated.parallel([
-          onPressOut,
-          Animated.spring(position, {
-            toValue: 0,
-            useNativeDriver: true,
-          }),
-        ]).start();
-      },
-    })
-  ).current;
-
+  // Values
   const scale = useRef(new Animated.Value(1)).current;
   const translateX = useRef(new Animated.Value(0)).current;
 
-  const onPressIn = () =>
-    Animated.spring(scale, {
-      toValue: 0.9,
-      useNativeDriver: true,
-    }).start();
+  // Animations
+  const onPressIn = Animated.spring(scale, {
+    toValue: 0.9,
+    useNativeDriver: true,
+  });
   const onPressOut = Animated.spring(scale, {
     toValue: 1,
     useNativeDriver: true,
   });
+  const goCenter = Animated.spring(translateX, {
+    toValue: 0,
+    useNativeDriver: true,
+  });
+
+  // Pan Responders
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderGrant: () => onPressIn.start(),
+      onPanResponderMove: (_, { dx }) => {
+        translateX.setValue(dx);
+      },
+      onPanResponderRelease: () => {
+        Animated.parallel([onPressOut, goCenter]).start();
+      },
+    })
+  ).current;
 
   return (
     <Container>
