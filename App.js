@@ -2,6 +2,7 @@ import React, { useRef, useState } from "react";
 import { Animated, PanResponder, View, Easing } from "react-native";
 import styled from "styled-components/native";
 import { Ionicons } from "@expo/vector-icons";
+import icons from "./icons";
 
 const BLACK_COLOR = "#1e272e";
 const GREY = "#485460";
@@ -31,7 +32,7 @@ const WordContainer = styled(Animated.createAnimatedComponent(View))`
 const Word = styled.Text`
   font-weight: 500;
   color: ${(props) => props.color};
-  font-size: 38px;
+  font-size: 20px;
 `;
 
 const Center = styled.View`
@@ -49,8 +50,6 @@ const IconCard = styled(Animated.createAnimatedComponent(View))`
 `;
 
 export default function App() {
-  // State
-
   // Animation Values
   const iconScale = useRef(new Animated.Value(1)).current;
   const iconPosition = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
@@ -65,6 +64,16 @@ export default function App() {
     outputRange: [1, 2],
     extrapolate: "clamp",
   });
+
+  // State
+  const [iconIndex, setIconIndex] = useState(0);
+  const showNextIcon = () => {
+    setIconIndex((prev) => prev + 1);
+    Animated.parallel([
+      Animated.spring(iconScale, { toValue: 1, useNativeDriver: true }),
+      Animated.spring(iconOpacity, { toValue: 1, useNativeDriver: true }),
+    ]).start();
+  };
 
   // Animdation func
   const onPressIn = Animated.spring(iconScale, {
@@ -91,6 +100,12 @@ export default function App() {
     easing: Easing.linear,
     duration: 50,
   });
+  const onDropPosition = Animated.timing(iconPosition, {
+    toValue: 0,
+    duration: 50,
+    easing: Easing.linear,
+    useNativeDriver: true,
+  });
 
   // Pan Responders
   const panResponder = useRef(
@@ -106,8 +121,8 @@ export default function App() {
         if (dy < -250 || dy > 250) {
           Animated.sequence([
             Animated.parallel([onDropScale, onDropOpacity]),
-            goBackCenter,
-          ]).start();
+            onDropPosition,
+          ]).start(showNextIcon);
         } else {
           Animated.parallel([onPressOut, goBackCenter]).start();
         }
@@ -119,7 +134,7 @@ export default function App() {
     <Container>
       <Edge>
         <WordContainer style={{ transform: [{ scale: greenWordScale }] }}>
-          <Word color={GREEN}>know</Word>
+          <Word color={GREEN}>I know</Word>
         </WordContainer>
       </Edge>
       <Center>
@@ -133,12 +148,12 @@ export default function App() {
             opacity: iconOpacity,
           }}
         >
-          <Ionicons name="beer" color={GREY} size={76} />
+          <Ionicons name={icons[iconIndex]} color={GREY} size={76} />
         </IconCard>
       </Center>
       <Edge>
         <WordContainer style={{ transform: [{ scale: redWordScale }] }}>
-          <Word color={RED}>don't know</Word>
+          <Word color={RED}>I don't know</Word>
         </WordContainer>
       </Edge>
     </Container>
