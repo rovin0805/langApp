@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { Animated, PanResponder, View } from "react-native";
+import { Animated, PanResponder, View, Easing } from "react-native";
 import styled from "styled-components/native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -54,6 +54,7 @@ export default function App() {
   // Animation Values
   const iconScale = useRef(new Animated.Value(1)).current;
   const iconPosition = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
+  const iconOpacity = useRef(new Animated.Value(1)).current;
   const greenWordScale = iconPosition.y.interpolate({
     inputRange: [-300, -80],
     outputRange: [2, 1],
@@ -78,6 +79,18 @@ export default function App() {
     toValue: 0,
     useNativeDriver: true,
   });
+  const onDropScale = Animated.timing(iconScale, {
+    toValue: 0,
+    useNativeDriver: true,
+    duration: 50,
+    easing: Easing.linear,
+  });
+  const onDropOpacity = Animated.timing(iconOpacity, {
+    toValue: 0,
+    useNativeDriver: true,
+    easing: Easing.linear,
+    duration: 50,
+  });
 
   // Pan Responders
   const panResponder = useRef(
@@ -89,8 +102,15 @@ export default function App() {
       onPanResponderMove: (_, { dx, dy }) => {
         iconPosition.setValue({ x: dx, y: dy });
       },
-      onPanResponderRelease: () => {
-        Animated.parallel([onPressOut, goBackCenter]).start();
+      onPanResponderRelease: (_, { dy }) => {
+        if (dy < -250 || dy > 250) {
+          Animated.sequence([
+            Animated.parallel([onDropScale, onDropOpacity]),
+            goBackCenter,
+          ]).start();
+        } else {
+          Animated.parallel([onPressOut, goBackCenter]).start();
+        }
       },
     })
   ).current;
@@ -110,6 +130,7 @@ export default function App() {
               ...iconPosition.getTranslateTransform(),
               { scale: iconScale },
             ],
+            opacity: iconOpacity,
           }}
         >
           <Ionicons name="beer" color={GREY} size={76} />
